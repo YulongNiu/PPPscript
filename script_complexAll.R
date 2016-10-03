@@ -1,4 +1,5 @@
-##################################Complex################################
+##################################Complex###############################
+setwd('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/')
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~complex database~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # read MIPS complex database
 MIPSCom <- read.csv('complexAll/allComplexes.csv', sep = ';')
@@ -49,9 +50,9 @@ load('wholePhyloData.RData')
 
 # without anno
 for (i in 1:length(MIPSHumList)) {
-  entr <- match(MIPSHumList[[i]][[2]], names(annoFirst))
-  entr <- entr[!is.na(entr)]
-  MIPSHumList[[i]][[2]] <- names(annoFirst)[entr]
+  entr <- MIPSHumList[[i]][[2]]
+  entr <- entr[entr %in% names(annoFirst)]
+  MIPSHumList[[i]][[2]] <- entr
 }
 
 # delete with one unit
@@ -59,9 +60,11 @@ len <- sapply(MIPSHumList, function(x) {
   length(x[[2]])
 })
 MIPSHumList <- MIPSHumList[which(len != 1)]
-save(MIPSHumList, file = 'MIPSHumListNoRed.RData')
 
-#~~~~~~~~~~~~tranfer complex to 'gene-list' interaction format~~~~~~~~~~~~~~~
+save(MIPSHumList, file = 'complexAll/MIPSHumListNoRed.RData')
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#~~~~~~~~~~~~tranfer complex to 'gene-list' interaction format~~~~~~~~~~
 require('foreach')
 require('doMC')
 registerDoMC(4)
@@ -82,9 +85,9 @@ complexInterList <- foreach (i = 1:length(interVec)) %dopar% {
 }
 names(complexInterList) <- interVec
 save(complexInterList, file = 'complexInterList.RData')
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-#~~~~~~~~~~~~~~~~~~~~~~~~test Jac/Cor/decomposed~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~~~~~~test Jac/Cor/decomposed~~~~~~~~~~~~~~~~~~~~~~~
 require('bigmemory')
 require('foreach')
 require('doMC')
