@@ -1,9 +1,9 @@
-##################################Complex###############################
 setwd('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/')
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~complex database~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# read MIPS complex database
+
+##############################complex database#########################
+## read MIPS complex database
 MIPSCom <- read.csv('complexAll/allComplexes.csv', sep = ';')
-# select human complex
+## select human complex
 MIPSHum <- MIPSCom[MIPSCom[, 4] == 'Human', ]
 
 MIPSHumList <- list()
@@ -37,14 +37,10 @@ MIPSHumList <- MIPSHumList[which(len != 1)]
 
 names(MIPSHumList) <- paste('Complex', 1:length(MIPSHumList), sep = '')
 
-## sink('MIPSHumList.txt')
-## MIPSHumList
-## sink()
-
 save(MIPSHumList, file = 'complexAll/MIPSHumList.RData')
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#######################################################################
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~add JacardSim and Cor~~~~~~~~~~~~~~~~~~~~~
+##############################remove redondant subunits################
 load('complexAll/MIPSHumList.RData')
 load('wholePhyloData.RData')
 
@@ -61,83 +57,14 @@ len <- sapply(MIPSHumList, function(x) {
 })
 MIPSHumList <- MIPSHumList[which(len != 1)]
 
-save(MIPSHumList, file = 'complexAll/MIPSHumListNoRed.RData')
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-#~~~~~~~~~~~~tranfer complex to 'gene-list' interaction format~~~~~~~~~~
-require('foreach')
-require('doMC')
-registerDoMC(4)
-
-# translate to 'gene-list' interaction formate
-complexList <- sapply(MIPSHumList, '[[', 2)
-interVec <- unique(unlist(complexList))
-
-complexInterList <- foreach (i = 1:length(interVec)) %dopar% {
-  hasGene <- sapply(complexList, function(x) {
-    return(interVec[i] %in% x)
-  })
-  hasGeneList <- complexList[which(hasGene)]
-  hasGeneVec <- unique(unlist(hasGeneList))
-  # remove self
-  hasGeneVec <- hasGeneVec[hasGeneVec != interVec[i]]
-  return(hasGeneVec)
-}
-names(complexInterList) <- interVec
-save(complexInterList, file = 'complexInterList.RData')
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-#~~~~~~~~~~~~~~~~~~~~~~~~test Jac/Cor/decomposed~~~~~~~~~~~~~~~~~~~~~~~
-require('bigmemory')
-require('foreach')
-require('doMC')
-registerDoMC(4)
-jaccardSim <- attach.big.matrix('jaccardSim.desc')
-wholeCor <- attach.big.matrix('wholeCor.desc')
-
-# all possible combination
-for (i in 1:length(MIPSHumList)) {
-  possCom <- t(combn(MIPSHumList[[i]][[2]], 2))
-  MIPSHumList[[i]][[2]] <- possCom
-}
-
-
-# jaccard similarity
-for (i in 1:length(MIPSHumList)) {
-  print(paste('Now it is running ', i, ' in a total of ', length(MIPSHumList), '.', sep = ''))
-  
-  comInter <- MIPSHumList[[i]][[2]]
-  
-  comInterJacCor <- foreach(i = 1:nrow(comInter), .combine = rbind) %dopar% {
-    rowNum <- match(comInter[i, 1], rownames(jaccardSim))
-    colNum <- match(comInter[i, 2], rownames(jaccardSim))
-    jacsim <- jaccardSim[rowNum, colNum]
-    corValue <- wholeCor[rowNum, colNum]
-    interMat <- t(wholePhyloDataNet[rownames(wholePhyloDataNet) %in% comInter[i, 1:2], ])
-    cateVec <- unlist(CatePhylo(interMat, domain))
-    jacCorVec <- c(comInter[i, ], jacsim, corValue, cateVec)
-    return(jacCorVec)
-  }
-
-  # deal with row number is 1
-  if (!is.matrix(comInterJacCor)) {
-    comInterJacCor <- matrix(comInterJacCor, ncol = 16)
-  } else {}
-  
-  colnames(comInterJacCor) <- c('proteinA', 'proteinB', 'JaccardSim', 'Cor', paste('Bacteria', c('11', '10', '01', '00'), sep = ''), paste('Eukaryotes', c('11', '10', '01', '00'), sep = ''), paste('Archaea', c('11', '10', '01', '00'), sep = ''))
-  MIPSHumList[[i]][[2]] <- comInterJacCor
-}
-
-## sink('comInterJacCor.txt')
+## sink('complexAll/MIPSHumListNoRed.txt')
 ## MIPSHumList
 ## sink()
 
-save(MIPSHumList, file = 'comInterJacCor.RData')
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#########################################################################
+save(MIPSHumList, file = 'complexAll/MIPSHumListNoRed.RData')
+#######################################################################
 
-###############################Random select###############################
+###############################Random select###########################
 load('complexAll/MIPSHumListNoRed.RData')
 
 getAllComb <- function(index1, index2, complexMat){
@@ -211,7 +138,73 @@ notSelf <- apply(randomMat, 1, function(x) {
 })
 randomMat <- randomMat[notSelf, ]
 save(randomMat, file = 'randomMat.RData')
+######################################################################
+
+##~~~~~~~~~~~~~~~~~~~~~~Remove big complexes~~~~~~~~~~~~~~~~~~~~~~~~~
+load('complexAll/MIPSHumListNoRed.RData')
+
+lenAll <- sapply(MIPSHumList, function(x) length(x[[2]]))
+
+## all possible complex interactions
+complexInter <- lapply(MIPSHumList, function(x) {
+  possCom <- t(combn(x[[2]], 2))
+  return(possCom)
+})
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~test Jac/Cor/decomposed~~~~~~~~~~~~~~~~~~~~~~~
+require('bigmemory')
+require('foreach')
+require('doMC')
+registerDoMC(4)
+jaccardSim <- attach.big.matrix('jaccardSim.desc')
+wholeCor <- attach.big.matrix('wholeCor.desc')
+
+# all possible combination
+for (i in 1:length(MIPSHumList)) {
+  possCom <- t(combn(MIPSHumList[[i]][[2]], 2))
+  MIPSHumList[[i]][[2]] <- possCom
+}
+
+
+# jaccard similarity
+for (i in 1:length(MIPSHumList)) {
+  print(paste('Now it is running ', i, ' in a total of ', length(MIPSHumList), '.', sep = ''))
+  
+  comInter <- MIPSHumList[[i]][[2]]
+  
+  comInterJacCor <- foreach(i = 1:nrow(comInter), .combine = rbind) %dopar% {
+    rowNum <- match(comInter[i, 1], rownames(jaccardSim))
+    colNum <- match(comInter[i, 2], rownames(jaccardSim))
+    jacsim <- jaccardSim[rowNum, colNum]
+    corValue <- wholeCor[rowNum, colNum]
+    interMat <- t(wholePhyloDataNet[rownames(wholePhyloDataNet) %in% comInter[i, 1:2], ])
+    cateVec <- unlist(CatePhylo(interMat, domain))
+    jacCorVec <- c(comInter[i, ], jacsim, corValue, cateVec)
+    return(jacCorVec)
+  }
+
+  # deal with row number is 1
+  if (!is.matrix(comInterJacCor)) {
+    comInterJacCor <- matrix(comInterJacCor, ncol = 16)
+  } else {}
+  
+  colnames(comInterJacCor) <- c('proteinA', 'proteinB', 'JaccardSim', 'Cor', paste('Bacteria', c('11', '10', '01', '00'), sep = ''), paste('Eukaryotes', c('11', '10', '01', '00'), sep = ''), paste('Archaea', c('11', '10', '01', '00'), sep = ''))
+  MIPSHumList[[i]][[2]] <- comInterJacCor
+}
+
+## sink('comInterJacCor.txt')
+## MIPSHumList
+## sink()
+
+save(MIPSHumList, file = 'comInterJacCor.RData')
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#######################################################################
+
+
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~ROC~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 require('bigmemory')
