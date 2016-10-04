@@ -9,8 +9,9 @@ load('complexAll/allRS_seed123.RData')
 load('wholePhyloData.RData')
 
 profile <- t(wholePhyloDataNet)
+profile <- profile[match(tree$tip, rownames(profile)), ]
 
-simLR <- BayesTraitsBatch(ftMat = allRS,
+simLR <- BayesTraitsBatch(ftMat = allRS[1:10, ],
                           profileMat = profile,
                           n = 8,
                           BayesTraitsPath = '/home/Yulong/Biotools/BayesTraitsV2/BayesTraitsV2',
