@@ -137,10 +137,10 @@ notSelf <- apply(randomMat, 1, function(x) {
   }
 })
 randomMat <- randomMat[notSelf, ]
-save(randomMat, file = 'randomMat.RData')
+save(randomMat, file = 'complexAll/randomMat.RData')
 ######################################################################
 
-##~~~~~~~~~~~~~~~~~~~~~~Remove big complexes~~~~~~~~~~~~~~~~~~~~~~~~~
+########################Remove big complexes#########################
 load('complexAll/MIPSHumListNoRed.RData')
 
 lenAll <- sapply(MIPSHumList, function(x) length(x[[2]]))
@@ -151,7 +151,17 @@ complexInter <- lapply(MIPSHumList, function(x) {
   return(possCom)
 })
 
-##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## remove big complexes
+cutoffNum <- 30
+complexInterCut <- complexInter[lenAll <= cutoffNum]
+interMat <- do.call(rbind, complexInterCut)
+
+## ## remove duplicate inters
+## interMat <- t(apply(interMat, 1, sort))
+## interMat <- interMat[!duplicated(interMat), ]
+
+save(interMat, file = 'complexAll/interMat_30.RData')
+######################################################################
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~test Jac/Cor/decomposed~~~~~~~~~~~~~~~~~~~~~~~
