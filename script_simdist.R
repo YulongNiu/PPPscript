@@ -57,5 +57,5 @@ distham <- SimDistBatch(allRS, profile, DistHamming, n = 8)
 hamMat <- data.frame(distham = distham, status = allRS[, 3])
 hamRoc <- roc(status ~ distham, hamMat, levels = c('TP', 'TN'))
 
-save(corMat, corRoc, jacMat, jacRoc, MIMat, MIRoc, hamMat, hamRoc, file = 'complexAll/simdistROC.R')
+save(corMat, corRoc, jacMat, jacRoc, MIMat, MIRoc, hamMat, hamRoc, file = 'complexAll/simdistROC.RData')
 ##################################################################
