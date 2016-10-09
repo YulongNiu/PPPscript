@@ -152,7 +152,7 @@ complexInter <- lapply(MIPSHumList, function(x) {
 })
 
 ## remove big complexes
-cutoffNum <- 30
+cutoffNum <- 50
 complexInterCut <- complexInter[lenAll <= cutoffNum]
 interMat <- do.call(rbind, complexInterCut)
 
@@ -160,7 +160,7 @@ interMat <- do.call(rbind, complexInterCut)
 ## interMat <- t(apply(interMat, 1, sort))
 ## interMat <- interMat[!duplicated(interMat), ]
 
-save(interMat, file = 'complexAll/interMat_30.RData')
+save(interMat, file = 'complexAll/interMat_cut50.RData')
 ######################################################################
 
 
