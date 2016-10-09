@@ -5,8 +5,8 @@ setwd('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/
 library('PhyloProfile') ## version 0.3.8
 library('pROC')
 
-load('complexAll/allRS_cut40_seed123.RData')
-load('complexAll/simdistROC_cut40_seed123.RData')
+load('complexAll/allRS_cutInf_seed123.RData')
+load('complexAll/simdistROC_cutInf_seed123.RData')
 
 GetPosJac <- function(jacMat, corMat, linkVec, corSet){
   # USE: choose the top position in Jaccard mat

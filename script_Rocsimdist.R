@@ -3,7 +3,7 @@
 setwd('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/')
 
 #############################construct TP and TN###################
-load('complexAll/interMat_cut40.RData')
+load('complexAll/interMat_cutInf.RData')
 load('complexAll/randomMat.RData')
 
 set.seed(123)
@@ -14,7 +14,7 @@ allRS <- rbind(PRS, NRS)
 allRS <- cbind(allRS, rep(c('TP', 'TN'), c(nrow(PRS), nrow(NRS))))
 rownames(allRS) <- NULL
 colnames(allRS) <- c('From', 'To', 'Status')
-save(allRS, file = 'complexAll/allRS_cut40_seed123.RData')
+save(allRS, file = 'complexAll/allRS_cutInf_seed123.RData')
 
 set.seed(456)
 PRS <- interMat
@@ -24,7 +24,7 @@ allRS <- rbind(PRS, NRS)
 allRS <- cbind(allRS, rep(c('TP', 'TN'), c(nrow(PRS), nrow(NRS))))
 rownames(allRS) <- NULL
 colnames(allRS) <- c('From', 'To', 'Status')
-save(allRS, file = 'complexAll/allRS_cut40_seed456.RData')
+save(allRS, file = 'complexAll/allRS_cutInf_seed456.RData')
 ###################################################################
 
 setwd('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/')
@@ -33,7 +33,7 @@ setwd('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/
 library('PhyloProfile') ## version 0.3.7
 library('pROC')
 
-load('complexAll/allRS_cut40_seed123.RData')
+load('complexAll/allRS_cutInf_seed123.RData')
 load('wholePhyloData.RData')
 
 profile <- t(wholePhyloDataNet)
@@ -45,13 +45,13 @@ corRoc <- roc(status ~ simcor, corMat, levels = c('TP', 'TN'))
 
 ## jaccard
 simjac <- SimDistBatch(allRS, profile, SimJaccard, n = 8)
-jacMat <- data.frame(simjac = simjac, status = allRS[1:(TPNum * 2), 3])
+jacMat <- data.frame(simjac = simjac, status = allRS[, 3])
 jacRoc <- roc(status ~ simjac, jacMat, levels = c('TP', 'TN'))
 
 
 ## MI
 simMI <- SimDistBatch(allRS, profile, SimMI, n = 8)
-MIMat <- data.frame(simMI = simMI, status = allRS[1:(TPNum * 2), 3])
+MIMat <- data.frame(simMI = simMI, status = allRS[, 3])
 MIRoc <- roc(status ~ simMI, MIMat, levels = c('TP', 'TN'))
 
 ## hamming
@@ -59,5 +59,5 @@ distham <- SimDistBatch(allRS, profile, DistHamming, n = 8)
 hamMat <- data.frame(distham = distham, status = allRS[, 3])
 hamRoc <- roc(status ~ distham, hamMat, levels = c('TP', 'TN'))
 
-save(corMat, corRoc, jacMat, jacRoc, MIMat, MIRoc, hamMat, hamRoc, file = 'complexAll/simdistROC_cut40_seed123.RData')
+save(corMat, corRoc, jacMat, jacRoc, MIMat, MIRoc, hamMat, hamRoc, file = 'complexAll/simdistROC_cutInf_seed123.RData')
 ##################################################################

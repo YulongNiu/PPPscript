@@ -1,40 +1,26 @@
-############################## useful functions ######################
-GetSimiMat <- function(geneMat, phyloData, method = 'mutual', ncor = 4) {
-    ## USE: get the similarities with parallel method.
-    ## INPUT: 'geneMat' is the gene matrix with the column number is 2. 'phyloData' is phylogenetic matrix, in which the rownames and colnames should use a similar rules. 'method' is the similarity method. Up to now, it support . 'ncor' is the threads number.
-    ## OUTPUT: A matrix with similarities.
+setwd('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/')
 
-    require(vegan)
-    require(bioDist)
-    require('foreach')
-    require('doMC')
-    registerDoMC(ncor)
+##############################test all complex#######################
+library(pROC)
 
-    allRown <- rownames(phyloData)
-    
-    simVec <- foreach(i = 1:nrow(geneMat), .combine = c) %dopar% {
-        eachPhylo <- phyloData[allRown %in% geneMat[i, 1:2], ]
-        
-        if (method == 'mutual') {
-            eachSim <- mutualInfo(eachPhylo)
-          } else if (method == 'jaccard') {
-            eachSim <- 1 - vegdist(eachPhylo, method = 'jaccard')
-          }
+load('complexAll/allRS_cut40_seed123.RData')
+load('complexAll/simdistROC_cut40_seed123.RData')
+load('complexAll/DolloROC_cut40_seed123.RData')
+load('complexAll/LRROC_cut40_seed123.RData')
+load('complexAll/topROC_cut40_seed123.RData')
 
-        return(eachSim)
-    }
 
-    simMat <- cbind(geneMat, simVec)
-    colnames(simMat) <- c(colnames(geneMat)[1:2], 'simi')
+N <- sum(allRS[, 3] == 'TP')
+## AUC = 0.721
+topRoc <- roc(status ~ distTop, topMat[1:N*2, ], levels = c('TP', 'TN'))
+## AUC = 0.609
+LRRoc <- roc(status ~ simLR, LRMat[1:(N*2), ], levels = c('TP', 'TN'))
 
-    return(simMat)
-}
 
-######################################################################
-
+#####################################################################
 
 ############################### mutual test ###########################
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~mutual information~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~mutual information~~~~~~~~~~~~~
 require('ggplot2')
 load('complexAll/our_complex.RData')
 ## load('complexAll/our_complex_567.RData')
