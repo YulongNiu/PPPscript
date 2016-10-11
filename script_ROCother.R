@@ -1,7 +1,8 @@
 setwd('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/')
 
 ##############################test all complex#######################
-library(pROC)
+library('pROC')
+library('ggplot2')
 
 load('complexAll/allRS_cut40_seed123.RData')
 load('complexAll/simdistROC_cut40_seed123.RData')
@@ -13,9 +14,61 @@ load('complexAll/topROC_cut40_seed123.RData')
 N <- sum(allRS[, 3] == 'TP')
 ## AUC = 0.721
 topRoc <- roc(status ~ distTop, topMat[1:N*2, ], levels = c('TP', 'TN'))
+topRocMat <- cbind(1 - topRoc$specificities, topRoc$sensitivities)
+
 ## AUC = 0.609
 LRRoc <- roc(status ~ simLR, LRMat[1:(N*2), ], levels = c('TP', 'TN'))
+LRRocMat <- cbind(1 - LRRoc$specificities, LRRoc$sensitivities)
 
+## AUC = 0.623
+DolloRoc <- roc(status ~ distDollo, DolloMat[1:(N*2), ], levels = c('TP', 'TN'))
+DolloRocMat <- cbind(1 - DolloRoc$specificities, DolloRoc$sensitivities)
+
+## AUC = 0.702
+corRoc <- roc(status ~ simcor, corMat[1:(N*2), ], levels = c('TP', 'TN'))
+corRocMat <- cbind(1 - corRoc$specificities, corRoc$sensitivities)
+
+## AUC = 0.716
+jacRoc <- roc(status ~ simjac, jacMat[1:(N*2), ], levels = c('TP', 'TN'))
+jacRocMat <- cbind(1 - jacRoc$specificities, jacRoc$sensitivities)
+
+## AUC = 0.710
+MIRoc <- roc(status ~ simMI, MIMat[1:(N*2), ], levels = c('TP', 'TN'))
+MIRocMat <- cbind(1 - MIRoc$specificities, MIRoc$sensitivities)
+
+## AUC = 0.666
+hamRoc <- roc(status ~ distham, hamMat[1:(N*2), ], levels = c('TP', 'TN'))
+hamRocMat <- cbind(1 - hamRoc$specificities, hamRoc$sensitivities)
+
+## plot ROC
+mergedRocMat <- rbind(topRocMat,
+                      LRRocMat,
+                      DolloRocMat,
+                      corRocMat,
+                      jacRocMat,
+                      MIRocMat,
+                      hamRocMat)
+mergedRocMat <- data.frame(FPR = mergedRocMat[, 1],
+                           TPR = mergedRocMat[, 2],
+                           Method = rep(c('Top', 'Tree', 'Dollo', 'Cor', 'Jaccard', 'MI', 'Hamming'), c(nrow(topRocMat), nrow(LRRocMat), nrow(DolloRocMat), nrow(corRocMat), nrow(jacRocMat), nrow(MIRocMat), nrow(hamRocMat))))
+
+pdf('complexAll/our_complexAll_ROC.pdf', height = 7, width = 9)
+ggplot(data = mergedRocMat, mapping = aes(x = FPR, y = TPR, colour = Method)) +
+  geom_line() +
+  xlab('False positive rate') +
+  ylab('True positive rate') +
+  geom_abline(intercept = 0, slope = 1, colour="grey", linetype = "dashed") +
+  scale_color_discrete(
+    name = 'Methods',
+    breaks = c('Top', 'Tree', 'Dollo', 'Cor', 'Jaccard', 'MI', 'Hamming'),
+    labels = c('Top AUC=0.721',
+               'Tree AUC=0.609',
+               'Dollo AUC=0.623',
+               'Cor AUC=0.702',
+               'Jaccard AUC=0.716',
+               'MI AUC=0.710',
+               'Hamming AUC=0.666'))
+dev.off()
 
 #####################################################################
 
