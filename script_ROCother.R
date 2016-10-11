@@ -8,7 +8,7 @@ require('doMC')
 registerDoMC(4)
 
 ## load file
-pat <- 'ROC_cut40_seed123'
+pat <- 'ROC_cutInf_seed123'
 rocDataFiles <- dir('complexAll', pattern = pat, full.names = TRUE)
 for(i in rocDataFiles) {load(i)}
 
@@ -39,7 +39,7 @@ mergedRocMat <- data.frame(FPR = mergedRocMat[, 1],
 aucAnno <- paste0(names(stList), ' AUC=', round(sapply(rocList, function(x){return(x$auc)}), 3))
 
 
-pdf('complexAll/our_complexAll_cut40_seed123_ROC.pdf')
+pdf('complexAll/our_complexAll_cutInf_seed123_ROC.pdf', height = 7, width = 9)
 ggplot(data = mergedRocMat, mapping = aes(x = FPR, y = TPR, colour = Methods)) +
   geom_line() +
   xlab('False positive rate') +
