@@ -31,27 +31,26 @@ simLR <- sapply(simLR, '[[', 3)
 save(simLR, allRS, file = 'complexAll/addRS402Inf.RData')
 #################################################################
 
-## ###############################add LR#############################
-## library(pROC)
+###############################add LR#############################
+library(pROC)
 
-## load('complexAll/LRROC_cut30_seed123.RData')
-## load('complexAll/allRS_cut30_seed123.RData')
-## allRS30 <- allRS
-## load('complexAll/allRS_cut40_seed123.RData')
-## allRS40 <- allRS
-## load('complexAll/addRS30240.RData')
+load('complexAll/LRROC_cut40_seed123.RData')
+load('complexAll/allRS_cut40_seed123.RData')
+allRS40 <- allRS
+load('complexAll/allRS_cutInf_seed123.RData')
+allRSInf <- allRS
+load('complexAll/addRS402Inf.RData')
 
+allRS40Vec <- apply(allRS40, 1, paste, collapse = '|')
+allRSInfVec <- apply(allRSInf, 1, paste, collapse = '|')
+addRSVec <- apply(allRS, 1, paste, collapse = '|')
+addLRVec <- c(as.numeric(LRMat[, 1]), simLR)
+names(addLRVec) <- c(allRS40Vec, addRSVec)
 
-## allRS30Vec <- apply(allRS30, 1, paste, collapse = '|')
-## allRS40Vec <- apply(allRS40, 1, paste, collapse = '|')
-## addRSVec <- apply(allRS, 1, paste, collapse = '|')
-## addLRVec <- c(as.numeric(LRMat[, 1]), simLR)
-## names(addLRVec) <- c(allRS30Vec, addRSVec)
+LRMat <- data.frame(simLR = addLRVec[match(allRS40Vec, names(addLRVec))],
+                    status = allRS40[, 3])
+LRRoc <- roc(status ~ simLR, LRMat, levels = c('TP', 'TN'))
 
-## LRMat <- data.frame(simLR = addLRVec[match(allRS40Vec, names(addLRVec))],
-##                     status = allRS40[, 3])
-## LRRoc <- roc(status ~ simLR, LRMat, levels = c('TP', 'TN'))
-
-## save(LRMat, LRRoc, file = 'complexAll/LRROC_cut40_seed123.RData')
-## ##################################################################
+save(LRMat, LRRoc, file = 'complexAll/LRROC_cutInf_seed123.RData')
+##################################################################
 
