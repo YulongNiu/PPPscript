@@ -15,13 +15,13 @@ for(i in rocDataFiles) {load(i)}
 ## set TP number
 N <- sum(topMat[, 2] == 'TP')
 
-stList <- list(Top = topMat[1:N*2, ],
-               Tree = LRMat[1:N*2, ],
-               Dollo = DolloMat[1:N*2, ],
-               Cor = corMat[1:N*2, ],
-               Jaccard = jacMat[1:N*2, ],
-               MI = MIMat[1:N*2, ],
-               Hamming = hamMat[1:N*2, ])
+stList <- list(Top = topMat[1:(N*2), ],
+               Tree = LRMat[1:(N*2), ],
+               Dollo = DolloMat[1:(N*2), ],
+               Cor = corMat[1:(N*2), ],
+               Jaccard = jacMat[1:(N*2), ],
+               MI = MIMat[1:(N*2), ],
+               Hamming = hamMat[1:(N*2), ])
 rocList <- foreach(i = 1:length(stList)) %dopar% {
   x <- stList[[i]]
   return(roc(x[, 2], x[, 1], levels = c('TP', 'TN')))
@@ -37,7 +37,6 @@ mergedRocMat <- data.frame(FPR = mergedRocMat[, 1],
                            TPR = mergedRocMat[, 2],
                            Methods = rep(names(stList), sapply(rocMatList, nrow)))
 aucAnno <- paste0(names(stList), ' AUC=', round(sapply(rocList, function(x){return(x$auc)}), 3))
-
 
 pdf('complexAll/our_complexAll_cutInf_seed123_ROC.pdf', height = 7, width = 9)
 ggplot(data = mergedRocMat, mapping = aes(x = FPR, y = TPR, colour = Methods)) +

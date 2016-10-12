@@ -53,17 +53,35 @@ norProfile <- apply(norProfile, 1, function(x) {
   x <- log2(x/max(x))
   return(x)
 })
+norProfile <- t(norProfile)
 
 ## step3: z-score for each column
 norProfile <- apply(norProfile, 2, function(x) {
   x <- scale(x)
   return(x)
 })
-norProfile <- t(norProfile)
-colnames(norProfile) <- colnames(wholePhyloData)
+rownames(norProfile) <- rownames(wholePhyloData)
 
 save(norProfile, file = 'NPP_profile.RData')
 #####################################################################
 
+###############################NPP_cor##############################
+setwd('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/')
+
+library('PhyloProfile') ## version 0.3.10
+library('pROC')
+
+load('complexAll/allRS_cutInf_seed123.RData')
+load('NPP_profile.RData')
+
+profile <- t(norProfile)
+
+## correlation
+simcor <- SimDistBatch(allRS, profile, SimCor, n = 4)
+corMatNPP <- data.frame(simcor = simcor, status = allRS[, 3])
+corRocNPP <- roc(status ~ simcor, corMatNPP, levels = c('TP', 'TN'))
+
+save(corMatNPP, corRocNPP, file = 'complexAll/NPPCorROC_cutInf_seed123.RData')
+####################################################################
 
 

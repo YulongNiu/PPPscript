@@ -1,31 +1,31 @@
 #! /usr/bin/Rscript --vanilla
 
-setwd('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/')
+## setwd('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/')
 
-#############################construct TP and TN###################
-load('complexAll/interMat_cutInf.RData')
-load('complexAll/randomMat.RData')
+## #############################construct TP and TN###################
+## load('complexAll/interMat_cutInf.RData')
+## load('complexAll/randomMat.RData')
 
-set.seed(123)
-PRS <- interMat
-NRS <- randomMat[sample(1:nrow(randomMat), 10 * nrow(PRS)), ]
-NRS <- apply(NRS, 1:2, as.character)
-allRS <- rbind(PRS, NRS)
-allRS <- cbind(allRS, rep(c('TP', 'TN'), c(nrow(PRS), nrow(NRS))))
-rownames(allRS) <- NULL
-colnames(allRS) <- c('From', 'To', 'Status')
-save(allRS, file = 'complexAll/allRS_cutInf_seed123.RData')
+## set.seed(123)
+## PRS <- interMat
+## NRS <- randomMat[sample(1:nrow(randomMat), 10 * nrow(PRS)), ]
+## NRS <- apply(NRS, 1:2, as.character)
+## allRS <- rbind(PRS, NRS)
+## allRS <- cbind(allRS, rep(c('TP', 'TN'), c(nrow(PRS), nrow(NRS))))
+## rownames(allRS) <- NULL
+## colnames(allRS) <- c('From', 'To', 'Status')
+## save(allRS, file = 'complexAll/allRS_cutInf_seed123.RData')
 
-set.seed(456)
-PRS <- interMat
-NRS <- randomMat[sample(1:nrow(randomMat), 10 * nrow(PRS)), ]
-NRS <- apply(NRS, 1:2, as.character)
-allRS <- rbind(PRS, NRS)
-allRS <- cbind(allRS, rep(c('TP', 'TN'), c(nrow(PRS), nrow(NRS))))
-rownames(allRS) <- NULL
-colnames(allRS) <- c('From', 'To', 'Status')
-save(allRS, file = 'complexAll/allRS_cutInf_seed456.RData')
-###################################################################
+## set.seed(456)
+## PRS <- interMat
+## NRS <- randomMat[sample(1:nrow(randomMat), 10 * nrow(PRS)), ]
+## NRS <- apply(NRS, 1:2, as.character)
+## allRS <- rbind(PRS, NRS)
+## allRS <- cbind(allRS, rep(c('TP', 'TN'), c(nrow(PRS), nrow(NRS))))
+## rownames(allRS) <- NULL
+## colnames(allRS) <- c('From', 'To', 'Status')
+## save(allRS, file = 'complexAll/allRS_cutInf_seed456.RData')
+## ###################################################################
 
 setwd('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/')
 
@@ -33,10 +33,10 @@ setwd('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/
 library('PhyloProfile') ## version 0.3.10
 library('pROC')
 
-load('complexAll/allRS_cut40_seed123.RData')
-load('wholePhyloData.RData')
+load('complexAll/allRS_cutInf_seed123.RData')
+load('NPP_profile.RData')
 
-profile <- t(wholePhyloDataNet)
+profile <- t(norProfile)
 
 ## correlation
 simcor <- SimDistBatch(allRS, profile, SimCor, n = 8)
@@ -60,9 +60,9 @@ hamMat <- data.frame(distham = distham, status = allRS[, 3])
 hamRoc <- roc(status ~ distham, hamMat, levels = c('TP', 'TN'))
 
 ## euclidean
-disteu <- SimDistBatch(allRS, profile, DistEuclidean, n = 3)
+disteu <- SimDistBatch(allRS, profile, DistEuclidean, n = 8)
 euMat <- data.frame(distham = disteu, status = allRS[, 3])
 euRoc <- roc(status ~ disteu, euMat, levels = c('TP', 'TN'))
 
-save(corMat, corRoc, jacMat, jacRoc, MIMat, MIRoc, hamMat, hamRoc, euMat, euRoc, file = 'complexAll/simdistROC_cut40_seed123.RData')
+save(corMat, corRoc, jacMat, jacRoc, MIMat, MIRoc, hamMat, hamRoc, euMat, euRoc, file = 'complexAll/simdistROCNPP_cutInf_seed123.RData')
 ##################################################################
