@@ -51,34 +51,7 @@ ggplot(data = mergedRocMat, mapping = aes(x = FPR, y = TPR, colour = Methods)) +
     labels = aucAnno)
 dev.off()
 
-#####################################################################
-
-############################### mutual test ###########################
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~mutual information~~~~~~~~~~~~~
-require('ggplot2')
-load('complexAll/our_complex.RData')
-## load('complexAll/our_complex_567.RData')
-## load('complex/Bioinfor_complex.RData')
-load('wholePhyloData.RData')
-
-PRSJacCor <- apply(PRSJacCor, 1:2, as.character)
-NRSJacCor <- apply(NRSJacCor, 1:2, as.character)
-PRSmutual <- GetSimiMat(PRSJacCor[, 1:2], wholePhyloDataNet)
-NRSmutual <- GetSimiMat(NRSJacCor[, 1:2], wholePhyloDataNet)
-
-mutualVec <- c(PRSmutual[, 'simi'], NRSmutual[, 'simi'])
-mutualsim <- data.frame(Mutual = as.numeric(mutualVec), Status = rep(c('TP', 'TN'), c(nrow(PRSmutual), nrow(NRSmutual))))
-
-p <- ggplot(data = mutualsim, aes(x = Mutual))
-p +
-  geom_histogram(position = 'identity', alpha=0.5, aes(y = ..density.., fill = factor(Status))) +
-  stat_density(geom = 'line', position = 'identity', aes(colour = factor(Status)))
-
-save(PRSmutual, NRSmutual, file = 'complexAll/our_complex_mutual.RData')
-## save(PRSmutual, NRSmutual, file = 'complexAll/our_complex_mutual_567.RData')
-## save(PRSmutual, NRSmutual, file = 'complex/Bioinfor_complex_mutua.RData')
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-########################################################################
+#######################################################################
 
 ############################### plot ROC with other method #############
 

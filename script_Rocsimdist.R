@@ -30,10 +30,10 @@ save(allRS, file = 'complexAll/allRS_cutInf_seed456.RData')
 setwd('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/')
 
 ###########################simdist################################
-library('PhyloProfile') ## version 0.3.7
+library('PhyloProfile') ## version 0.3.10
 library('pROC')
 
-load('complexAll/allRS_cutInf_seed123.RData')
+load('complexAll/allRS_cut40_seed123.RData')
 load('wholePhyloData.RData')
 
 profile <- t(wholePhyloDataNet)
@@ -59,5 +59,10 @@ distham <- SimDistBatch(allRS, profile, DistHamming, n = 8)
 hamMat <- data.frame(distham = distham, status = allRS[, 3])
 hamRoc <- roc(status ~ distham, hamMat, levels = c('TP', 'TN'))
 
-save(corMat, corRoc, jacMat, jacRoc, MIMat, MIRoc, hamMat, hamRoc, file = 'complexAll/simdistROC_cutInf_seed123.RData')
+## euclidean
+disteu <- SimDistBatch(allRS, profile, DistEuclidean, n = 3)
+euMat <- data.frame(distham = disteu, status = allRS[, 3])
+euRoc <- roc(status ~ disteu, euMat, levels = c('TP', 'TN'))
+
+save(corMat, corRoc, jacMat, jacRoc, MIMat, MIRoc, hamMat, hamRoc, euMat, euRoc, file = 'complexAll/simdistROC_cut40_seed123.RData')
 ##################################################################
