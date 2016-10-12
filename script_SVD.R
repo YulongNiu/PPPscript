@@ -5,11 +5,11 @@ SVDPhy <- function(input_matrix, trimming = 1, min_conservation = -0.1){
   svdm <- (s$u)
 
   ## filter genes
-  filteredIndices = apply(input_matrix, 1, function(x){
+  filteredIndices <- apply(input_matrix, 1, function(x){
     counter <- sum(x > 0)
     return(counter > min_conservation)
   })
-  svdm <- svdm[filteredIndices,]
+  svdm <- svdm[filteredIndices, ]
 
   ## trim species
   svdmTrimmed <- svdm[, 1:round(trimming * ncol(svdm))]
@@ -18,7 +18,7 @@ SVDPhy <- function(input_matrix, trimming = 1, min_conservation = -0.1){
   }))
 
   rownames(resultM) <- rownames(input_matrix)
-  colnames(resultM) <- colnames(input_matrix)
+  colnames(resultM) <- colnames(input_matrix)[1:round(trimming * ncol(svdm))]
 
    return(resultM)
 }
@@ -30,7 +30,7 @@ load('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/wholePhyloDataHit.RData')
 ## ref: SVD-phy: improved prediction of protein functional associations through singular value decomposition of phylogenetic profiles
 ## step1: M < 60 to 0
 norProfile <- apply(wholePhyloData, 1:2, function(x){
-  x <- ifelse(x < 60, 0, x)
+  x <- ifelse(x < 60, 1, x)
   return(x)
 })
 
@@ -42,8 +42,10 @@ norProfile <- apply(norProfile, 1, function(x) {
 norProfile <- t(norProfile)
 
 ## step3: try different trimming score, 0%, 15%, 30%, 45%
-norProfile0 <- SVDPhy(norProfile, trimming = 0)
-norProfile15 <- SVDPhy(norProfile, trimming = 15)
-norProfile30 <- SVDPhy(norProfile, trimming = 30)
-norProfile45 <- SVDPhy(norProfile, trimming = 45)
+norProfile100 <- SVDPhy(norProfile, trimming = 1)
+norProfile15 <- SVDPhy(norProfile, trimming = 0.15)
+norProfile30 <- SVDPhy(norProfile, trimming = 0.30)
+norProfile45 <- SVDPhy(norProfile, trimming = 0.45)
+
+save(norProfile100, norProfile45, norProfile30, norProfile15, file = 'SVD_profile.RData')
 ####################################################################

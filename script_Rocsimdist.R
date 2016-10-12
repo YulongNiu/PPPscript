@@ -30,13 +30,13 @@
 setwd('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/')
 
 ###########################simdist################################
-library('PhyloProfile') ## version 0.3.10
+library('PhyloProfile') ## version 0.3.11
 library('pROC')
 
 load('complexAll/allRS_cutInf_seed123.RData')
-load('NPP_profile.RData')
+load('SVD_profile.RData')
 
-profile <- t(norProfile)
+profile <- t(norProfile100)
 
 ## correlation
 simcor <- SimDistBatch(allRS, profile, SimCor, n = 8)
