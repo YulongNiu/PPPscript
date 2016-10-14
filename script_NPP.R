@@ -42,9 +42,9 @@ setwd('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/
 load('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/wholePhyloDataHit.RData')
 
 ## ref: http://www.nature.com/nature/journal/v493/n7434/extref/nature11779-s1.pdf
-## step1: set hit < 50 to 1
+## step1: set hit < 70 to 1
 norProfile <- apply(wholePhyloData, 1:2, function(x){
-  x <- ifelse(x < 50, 1, x)
+  x <- ifelse(x < 70, 1, x)
   return(x)
 })
 
@@ -62,7 +62,7 @@ norProfile <- apply(norProfile, 2, function(x) {
 })
 rownames(norProfile) <- rownames(wholePhyloData)
 
-save(norProfile, file = 'NPP_profile.RData')
+save(norProfile, file = 'NPP70_profile.RData')
 #####################################################################
 
 ###############################NPP_cor##############################

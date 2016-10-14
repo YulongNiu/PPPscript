@@ -33,7 +33,7 @@ setwd('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/
 library('PhyloProfile') ## version 0.3.11
 library('pROC')
 
-load('complexAll/allRS_cutInf_seed123.RData')
+load('complexAll/allRS_cut400_seed123.RData')
 load('SVD_profile.RData')
 
 profile <- t(norProfile100)
@@ -43,26 +43,26 @@ simcor <- SimDistBatch(allRS, profile, SimCor, n = 8)
 corMat <- data.frame(simcor = simcor, status = allRS[, 3])
 corRoc <- roc(status ~ simcor, corMat, levels = c('TP', 'TN'))
 
-## jaccard
-simjac <- SimDistBatch(allRS, profile, SimJaccard, n = 8)
-jacMat <- data.frame(simjac = simjac, status = allRS[, 3])
-jacRoc <- roc(status ~ simjac, jacMat, levels = c('TP', 'TN'))
-
+## ## jaccard
+## simjac <- SimDistBatch(allRS, profile, SimJaccard, n = 8)
+## jacMat <- data.frame(simjac = simjac, status = allRS[, 3])
+## jacRoc <- roc(status ~ simjac, jacMat, levels = c('TP', 'TN'))
 
 ## MI
-simMI <- SimDistBatch(allRS, profile, SimMI, n = 8)
+simMI <- SimDistBatch(allRS, profile, SimMIConti, n = 8)
 MIMat <- data.frame(simMI = simMI, status = allRS[, 3])
 MIRoc <- roc(status ~ simMI, MIMat, levels = c('TP', 'TN'))
 
-## hamming
-distham <- SimDistBatch(allRS, profile, DistHamming, n = 8)
-hamMat <- data.frame(distham = distham, status = allRS[, 3])
-hamRoc <- roc(status ~ distham, hamMat, levels = c('TP', 'TN'))
+## ## hamming
+## distham <- SimDistBatch(allRS, profile, DistHamming, n = 8)
+## hamMat <- data.frame(distham = distham, status = allRS[, 3])
+## hamRoc <- roc(status ~ distham, hamMat, levels = c('TP', 'TN'))
 
 ## euclidean
 disteu <- SimDistBatch(allRS, profile, DistEuclidean, n = 8)
 euMat <- data.frame(distham = disteu, status = allRS[, 3])
 euRoc <- roc(status ~ disteu, euMat, levels = c('TP', 'TN'))
 
-save(corMat, corRoc, jacMat, jacRoc, MIMat, MIRoc, hamMat, hamRoc, euMat, euRoc, file = 'complexAll/simdistROCNPP_cutInf_seed123.RData')
+## save(corMat, corRoc, jacMat, jacRoc, MIMat, MIRoc, hamMat, hamRoc, euMat, euRoc, file = 'complexAll/simdistROCSVD100_cutInf_seed123.RData')
+save(corMat, corRoc, MIMat, MIRoc, euMat, euRoc, file = 'complexAll/simdistROCSVD100_cut40_seed123.RData')
 ##################################################################

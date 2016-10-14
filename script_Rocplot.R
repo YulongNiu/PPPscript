@@ -8,6 +8,13 @@ require('doMC')
 registerDoMC(4)
 
 ## load file
+load('complexAll/simdistROCNPP70_cutInf_seed123.RData')
+corMatNPP <- corMat
+load('complexAll/simdistROCSVD100_cutInf_seed123.RData')
+euMatSVD100 <- euMat
+load('complexAll/simdistROCSVD30_cutInf_seed123.RData')
+euMatSVD30 <- euMat
+
 pat <- 'ROC_cutInf_seed123'
 rocDataFiles <- dir('complexAll', pattern = pat, full.names = TRUE)
 for(i in rocDataFiles) {load(i)}
@@ -21,7 +28,57 @@ stList <- list(Top = topMat[1:(N*2), ],
                Cor = corMat[1:(N*2), ],
                Jaccard = jacMat[1:(N*2), ],
                MI = MIMat[1:(N*2), ],
-               Hamming = hamMat[1:(N*2), ])
+               Hamming = hamMat[1:(N*2), ],
+               NPP = corMatNPP[1:(N*2), ],
+               SVD100 = euMatSVD100[1:(N*2), ],
+               SVD30 = euMatSVD30[1:(N*2), ])
+rocList <- foreach(i = 1:length(stList)) %dopar% {
+  x <- stList[[i]]
+  return(roc(x[, 2], x[, 1], levels = c('TP', 'TN')))
+}
+rocMatList <- foreach(i = 1:length(stList)) %dopar% {
+  x <- rocList[[i]]
+  return(cbind(1 - x$specificities, x$sensitivities))
+}
+
+## plot ROC
+mergedRocMat <- do.call(rbind, rocMatList)
+mergedRocMat <- data.frame(FPR = mergedRocMat[, 1],
+                           TPR = mergedRocMat[, 2],
+                           Methods = rep(names(stList), sapply(rocMatList, nrow)))
+aucAnno <- paste0(names(stList), '=', round(sapply(rocList, function(x){return(x$auc)}), 3))
+
+pdf('complexAll/our_complexAll_cutInf_seed123_ROC.pdf', height = 7, width = 9)
+ggplot(data = mergedRocMat, mapping = aes(x = FPR, y = TPR, colour = Methods)) +
+  geom_line() +
+  xlab('False positive rate') +
+  ylab('True positive rate') +
+  geom_abline(intercept = 0, slope = 1, colour="grey", linetype = "dashed") +
+  scale_color_discrete(
+    name = 'AUC',
+    breaks = names(stList),
+    labels = aucAnno)
+dev.off()
+
+#######################################################################
+
+
+###############################plot NPP and SVD######################
+library('pROC')
+library('ggplot2')
+library('foreach')
+require('doMC')
+registerDoMC(4)
+
+## load file
+load('complexAll/simdistROCSVD100_cutInf_seed123.RData')
+
+## set TP number
+N <- sum(corMat[, 2] == 'TP')
+
+stList <- list(Cor = corMat[1:(N*2), ],
+               MI = MIMat[1:(N*2), ],
+               Euclidean = euMat[1:(N*2), ])
 rocList <- foreach(i = 1:length(stList)) %dopar% {
   x <- stList[[i]]
   return(roc(x[, 2], x[, 1], levels = c('TP', 'TN')))
@@ -38,7 +95,7 @@ mergedRocMat <- data.frame(FPR = mergedRocMat[, 1],
                            Methods = rep(names(stList), sapply(rocMatList, nrow)))
 aucAnno <- paste0(names(stList), ' AUC=', round(sapply(rocList, function(x){return(x$auc)}), 3))
 
-pdf('complexAll/our_complexAll_cutInf_seed123_ROC.pdf', height = 7, width = 9)
+pdf('complexAll/our_complexAll_cutInf_seed123_SVD100ROC.pdf', height = 7, width = 9)
 ggplot(data = mergedRocMat, mapping = aes(x = FPR, y = TPR, colour = Methods)) +
   geom_line() +
   xlab('False positive rate') +
@@ -50,8 +107,7 @@ ggplot(data = mergedRocMat, mapping = aes(x = FPR, y = TPR, colour = Methods)) +
     labels = aucAnno)
 dev.off()
 
-#######################################################################
-
+#####################################################################
 ############################### plot ROC with other method #############
 
 ## AUC 0.5580
