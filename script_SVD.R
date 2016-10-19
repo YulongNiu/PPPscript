@@ -28,13 +28,13 @@ load('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/wholePhyloDataHit.RData')
 
 
 ## ref: SVD-phy: improved prediction of protein functional associations through singular value decomposition of phylogenetic profiles
-## step1: M < 60 to 0
+## step1: M < 60 to 1
 norProfile <- apply(wholePhyloData, 1:2, function(x){
   x <- ifelse(x < 60, 1, x)
   return(x)
 })
 
-## step2: log2(x[i, j]/max(x[i, ]))
+## step2: x[i, j]/max(x[i, ])
 norProfile <- apply(norProfile, 1, function(x) {
   x <- x/max(x)
   return(x)
