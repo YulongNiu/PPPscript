@@ -37,51 +37,27 @@ save(humanProAnno, wholePhyloData, file = 'wholePhyloDataHit.RData')
 #####################################################################
 
 #############################prepare NRR profile######################
-setwd('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/')
+library('PhyloProfile') ## version 0.3.13
 
+setwd('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/')
 load('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/wholePhyloDataHit.RData')
 
-## ref: http://www.nature.com/nature/journal/v493/n7434/extref/nature11779-s1.pdf
-## step1: set hit < 70 to 1
-norProfile <- apply(wholePhyloData, 1:2, function(x){
-  x <- ifelse(x < 70, 1, x)
-  return(x)
-})
-
-## step2: log2(x[i, j]/max(x[i, ]))
-norProfile <- apply(norProfile, 1, function(x) {
-  x <- log2(x/max(x))
-  return(x)
-})
-norProfile <- t(norProfile)
-
-## step3: z-score for each column
-norProfile <- apply(norProfile, 2, function(x) {
-  x <- scale(x)
-  return(x)
-})
-rownames(norProfile) <- rownames(wholePhyloData)
-
+norProfile <- NPPNor(wholePhyloData, bitCutoff = 70, bitReset = 1)
 save(norProfile, file = 'NPP70_profile.RData')
 #####################################################################
 
-###############################NPP_cor##############################
+##########################SVD preprocess############################
+library('PhyloProfile') ## version 0.3.13
+
 setwd('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/')
+load('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/wholePhyloDataHit.RData')
 
-library('PhyloProfile') ## version 0.3.10
-library('pROC')
+norProfile100 <- SVDPhy(wholePhyloData, bitCutoff = 60, bitReset = 1, trimming = 1, minConserve = -0.1)
+norProfile15 <- SVDPhy(wholePhyloData, bitCutoff = 60, bitReset = 0.15, trimming = 1, minConserve = -0.1)
+norProfile15 <- SVDPhy(wholePhyloData, bitCutoff = 60, bitReset = 0.3, trimming = 1, minConserve = -0.1)
+norProfile15 <- SVDPhy(wholePhyloData, bitCutoff = 60, bitReset = 0.45, trimming = 1, minConserve = -0.1)
 
-load('complexAll/allRS_cutInf_seed123.RData')
-load('NPP_profile.RData')
-
-profile <- t(norProfile)
-
-## correlation
-simcor <- SimDistBatch(allRS, profile, SimCor, n = 4)
-corMatNPP <- data.frame(simcor = simcor, status = allRS[, 3])
-corRocNPP <- roc(status ~ simcor, corMatNPP, levels = c('TP', 'TN'))
-
-save(corMatNPP, corRocNPP, file = 'complexAll/NPPCorROC_cutInf_seed123.RData')
+save(norProfile100, norProfile45, norProfile30, norProfile15, file = 'SVD_profile.RData')
 ####################################################################
 
 
