@@ -1,37 +1,85 @@
 setwd('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/')
 
+##########################hand TP/FP/TN/FN#################################
+HandTF <- function(valM, bin = 10000, increasing = TRUE) {
+
+  require('foreach')
+  require('doMC')
+  registerDoMC(4)
+
+  ## INPUT: "valM" is the measure data frame, 1st col is value, 2nd col is indicator. "bin" number of thresholds. "increasing" larger --> positive?
+  ## OUTPUT: TP/FP/TN/FN matrix
+
+  allVec <- valM[, 1]
+  PVec <- allVec[valM[, 2] == 'TP']
+  PNum <- length(PVec)
+  NVec <- allVec[valM[, 2] == 'TN']
+  NNum <- length(NVec)
+
+  maxVal <- max(allVec)
+  minVal <- min(allVec)
+
+  cutVec <- seq(minVal, maxVal, length.out = bin)
+
+  TFMat <- foreach(i = 1:length(cutVec), .combine = rbind) %dopar% {
+    eachCut <- cutVec[i]
+    TP <- sum(PVec >= eachCut)
+    FN <- PNum - TP
+    TN <- sum(NVec <= eachCut)
+    FP <- NNum - TN
+
+    return(c(TP, FP, TN, FN))
+  }
+
+  if (!increasing) {
+    TFMat <- TFMat[, 4:1]
+  } else {}
+
+  return(TFMat)
+}
+
+PR <- function(TPMat) {
+   return(cbind(TPMat[, 1]/rowSums(TPMat[, 1:2]), TPMat[, 1]/rowSums(TPMat[, c(1, 4)])))
+}
+#####################################################################
+
 ##############################test all complex#######################
 library('pROC')
 library('ggplot2')
 library('foreach')
-require('doMC')
+library('doMC')
 registerDoMC(4)
 
 ## load file
-load('complexAll/simdistROCNPP70_cutInf_seed456.RData')
+load('complexAll/simdistROCNPP70_cut40_seed123.RData')
 corMatNPP <- corMat
-load('complexAll/simdistROCSVD100_cutInf_seed456.RData')
+corRocNPP <- corRoc
+load('complexAll/simdistROCSVD100_cut40_seed123.RData')
 euMatSVD100 <- euMat
-load('complexAll/simdistROCSVD30_cutInf_seed456.RData')
+euRocSVD100 <- euRoc
+load('complexAll/simdistROCSVD30_cut40_seed123.RData')
 euMatSVD30 <- euMat
+euRocSVD30 <- euRoc
 
-pat <- 'ROC_cutInf_seed456'
+pat <- 'ROC_cut40_seed123'
 rocDataFiles <- dir('complexAll', pattern = pat, full.names = TRUE)
 for(i in rocDataFiles) {load(i)}
 
-## set TP number
-N <- sum(topMat[, 2] == 'TP')
+## set P and N number
+P <- sum(topMat[, 2] == 'TP')
+N <- sum(topMat[, 2] == 'TN')
 
-stList <- list(Top = topMat[1:(N*2), ],
-               Tree = LRMat[1:(N*2), ],
-               Dollo = DolloMat[1:(N*2), ],
-               Cor = corMat[1:(N*2), ],
-               Jaccard = jacMat[1:(N*2), ],
-               MI = MIMat[1:(N*2), ],
-               Hamming = hamMat[1:(N*2), ],
-               NPP = corMatNPP[1:(N*2), ],
-               SVD100 = euMatSVD100[1:(N*2), ],
-               SVD30 = euMatSVD30[1:(N*2), ])
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ROC~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+stList <- list(Top = topMat[1:(P*2), ],
+               Tree = LRMat[1:(P*2), ],
+               Dollo = DolloMat[1:(P*2), ],
+               Cor = corMat[1:(P*2), ],
+               Jaccard = jacMat[1:(P*2), ],
+               MI = MIMat[1:(P*2), ],
+               Hamming = hamMat[1:(P*2), ],
+               NPP = corMatNPP[1:(P*2), ],
+               SVD100 = euMatSVD100[1:(P*2), ],
+               SVD30 = euMatSVD30[1:(P*2), ])
 rocList <- foreach(i = 1:length(stList)) %dopar% {
   x <- stList[[i]]
   return(roc(x[, 2], x[, 1], levels = c('TP', 'TN')))
@@ -48,7 +96,7 @@ mergedRocMat <- data.frame(FPR = mergedRocMat[, 1],
                            Methods = rep(names(stList), sapply(rocMatList, nrow)))
 aucAnno <- paste0(names(stList), '=', round(sapply(rocList, function(x){return(x$auc)}), 3))
 
-pdf('complexAll/our_complexAll_cutInf_seed456_ROC.pdf', height = 7, width = 9)
+pdf('complexAll/our_complexAll_cut40_seed123_ROC.pdf', height = 7, width = 9)
 ggplot(data = mergedRocMat, mapping = aes(x = FPR, y = TPR, colour = Methods)) +
   geom_line() +
   xlab('False positive rate') +
@@ -59,6 +107,32 @@ ggplot(data = mergedRocMat, mapping = aes(x = FPR, y = TPR, colour = Methods)) +
     breaks = names(stList),
     labels = aucAnno)
 dev.off()
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~precision and recall~~~~~~~~~~~~~~~~
+prMatList <- list(Top = PR(HandTF(topMat, bin = 200000, increasing = FALSE)),
+               Tree = PR(HandTF(LRMat)),
+               Dollo =  PR(HandTF(DolloMat, increasing = FALSE)),
+               Cor = PR(HandTF(corMat)),
+               Jaccard = PR(HandTF(jacMat)),
+               MI = PR(HandTF(MIMat)),
+               Hamming = PR(HandTF(hamMat, increasing = FALSE)),
+               NPP = PR(HandTF(corMatNPP)),
+               SVD100 = PR(HandTF(euMatSVD100)),
+               SVD30 = PR(HandTF(euMatSVD30)))
+
+mergedPrMat <- do.call(rbind, prMatList)
+mergedPrMat <- data.frame(Precision = mergedPrMat[, 1],
+                          Recall = mergedPrMat[, 2],
+                          Methods = rep(names(prMatList), sapply(prMatList, nrow)))
+
+pdf('complexAll/our_complexAll_cut40_seed123_PR.pdf', height = 7, width = 9)
+ggplot(data = mergedPrMat, mapping = aes(x = Recall, y = Precision, colour = Methods)) +
+  geom_line() +
+  xlab('Recall') +
+  ylab('Precision')
+dev.off()
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #######################################################################
 
@@ -71,14 +145,14 @@ require('doMC')
 registerDoMC(4)
 
 ## load file
-load('complexAll/simdistROCSVD100_cutInf_seed123.RData')
+load('complexAll/simdistROCSVD30_cut40_seed123.RData')
 
 ## set TP number
-N <- sum(corMat[, 2] == 'TP')
+P <- sum(corMat[, 2] == 'TP')
 
-stList <- list(Cor = corMat[1:(N*2), ],
-               MI = MIMat[1:(N*2), ],
-               Euclidean = euMat[1:(N*2), ])
+stList <- list(Cor = corMat[1:(P*2), ],
+               MI = MIMat[1:(P*2), ],
+               Euclidean = euMat[1:(P*2), ])
 rocList <- foreach(i = 1:length(stList)) %dopar% {
   x <- stList[[i]]
   return(roc(x[, 2], x[, 1], levels = c('TP', 'TN')))
@@ -95,7 +169,7 @@ mergedRocMat <- data.frame(FPR = mergedRocMat[, 1],
                            Methods = rep(names(stList), sapply(rocMatList, nrow)))
 aucAnno <- paste0(names(stList), ' AUC=', round(sapply(rocList, function(x){return(x$auc)}), 3))
 
-pdf('complexAll/our_complexAll_cutInf_seed123_SVD100ROC.pdf', height = 7, width = 9)
+pdf('complexAll/our_complexAll_cut40_seed123_SVD100ROC.pdf', height = 7, width = 9)
 ggplot(data = mergedRocMat, mapping = aes(x = FPR, y = TPR, colour = Methods)) +
   geom_line() +
   xlab('False positive rate') +
