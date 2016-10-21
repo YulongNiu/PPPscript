@@ -51,25 +51,22 @@ library('doMC')
 registerDoMC(4)
 
 ## load file
-load('complexAll/simdistROCNPP70_cut40_seed123.RData')
+load('complexAll/simdistROCNPP70_cutInf_seed456.RData')
 corMatNPP <- corMat
 corRocNPP <- corRoc
-load('complexAll/simdistROCSVD100_cut40_seed123.RData')
+load('complexAll/simdistROCSVD100_cutInf_seed456.RData')
 euMatSVD100 <- euMat
 euRocSVD100 <- euRoc
-load('complexAll/simdistROCSVD30_cut40_seed123.RData')
+load('complexAll/simdistROCSVD30_cutInf_seed456.RData')
 euMatSVD30 <- euMat
 euRocSVD30 <- euRoc
 
-pat <- 'ROC_cut40_seed123'
+pat <- 'ROC_cutInf_seed456'
 rocDataFiles <- dir('complexAll', pattern = pat, full.names = TRUE)
 for(i in rocDataFiles) {load(i)}
 
-## set P and N number
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ROC~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 P <- sum(topMat[, 2] == 'TP')
-N <- sum(topMat[, 2] == 'TN')
-
-##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ROC~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 stList <- list(Top = topMat[1:(P*2), ],
                Tree = LRMat[1:(P*2), ],
                Dollo = DolloMat[1:(P*2), ],
@@ -94,18 +91,27 @@ mergedRocMat <- do.call(rbind, rocMatList)
 mergedRocMat <- data.frame(FPR = mergedRocMat[, 1],
                            TPR = mergedRocMat[, 2],
                            Methods = rep(names(stList), sapply(rocMatList, nrow)))
-aucAnno <- paste0(names(stList), '=', round(sapply(rocList, function(x){return(x$auc)}), 3))
 
-pdf('complexAll/our_complexAll_cut40_seed123_ROC.pdf', height = 7, width = 9)
-ggplot(data = mergedRocMat, mapping = aes(x = FPR, y = TPR, colour = Methods)) +
+aucAnno <- paste0(names(stList), '=', round(sapply(rocList, function(x){return(x$auc)}), 3))
+colAnno <- c('#F8766D', rep('#D39200', 2), rep('#00BA38', 2), rep('#00B9E3', 2),  '#FF61C3', rep('#DB72FB', 2))
+names(colAnno) <- names(stList)
+lineAnno <- c('solid', 'solid', 'dashed', 'solid', 'dashed', 'solid', 'dashed', 'solid', 'solid', 'dashed')
+names(lineAnno) <- names(stList)
+
+pdf('complexAll/our_complexAll_cutInf_seed456_ROC.pdf', height = 7, width = 9)
+ggplot(data = mergedRocMat, mapping = aes(x = FPR, y = TPR, colour = Methods, linetype = Methods)) +
   geom_line() +
   xlab('False positive rate') +
   ylab('True positive rate') +
   geom_abline(intercept = 0, slope = 1, colour="grey", linetype = "dashed") +
-  scale_color_discrete(
-    name = 'AUC',
-    breaks = names(stList),
-    labels = aucAnno)
+  scale_linetype_manual(name = 'AUC',
+                        labels = aucAnno,
+                        breaks = names(stList),
+                        values = lineAnno) +
+  scale_colour_manual(name = 'AUC',
+                      labels = aucAnno,
+                      breaks = names(stList),
+                      values = colAnno)
 dev.off()
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -126,11 +132,17 @@ mergedPrMat <- data.frame(Precision = mergedPrMat[, 1],
                           Recall = mergedPrMat[, 2],
                           Methods = rep(names(prMatList), sapply(prMatList, nrow)))
 
-pdf('complexAll/our_complexAll_cut40_seed123_PR.pdf', height = 7, width = 9)
-ggplot(data = mergedPrMat, mapping = aes(x = Recall, y = Precision, colour = Methods)) +
+pdf('complexAll/our_complexAll_cutInf_seed456_PR.pdf', height = 7, width = 9)
+ggplot(data = mergedPrMat, mapping = aes(x = Recall, y = Precision, colour = Methods, linetype = Methods)) +
   geom_line() +
   xlab('Recall') +
-  ylab('Precision')
+  ylab('Precision') +
+   scale_linetype_manual(name = 'Methods',
+                        breaks = names(prMatList),
+                        values = lineAnno) +
+  scale_colour_manual(name = 'Methods',
+                      breaks = names(prMatList),
+                      values = colAnno)
 dev.off()
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -145,7 +157,7 @@ require('doMC')
 registerDoMC(4)
 
 ## load file
-load('complexAll/simdistROCSVD30_cut40_seed123.RData')
+load('complexAll/simdistROCSVD30_cutInf_seed123.RData')
 
 ## set TP number
 P <- sum(corMat[, 2] == 'TP')
@@ -169,7 +181,7 @@ mergedRocMat <- data.frame(FPR = mergedRocMat[, 1],
                            Methods = rep(names(stList), sapply(rocMatList, nrow)))
 aucAnno <- paste0(names(stList), ' AUC=', round(sapply(rocList, function(x){return(x$auc)}), 3))
 
-pdf('complexAll/our_complexAll_cut40_seed123_SVD100ROC.pdf', height = 7, width = 9)
+pdf('complexAll/our_complexAll_cutInf_seed123_SVD100ROC.pdf', height = 7, width = 9)
 ggplot(data = mergedRocMat, mapping = aes(x = FPR, y = TPR, colour = Methods)) +
   geom_line() +
   xlab('False positive rate') +
