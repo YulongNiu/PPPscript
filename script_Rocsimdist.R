@@ -33,10 +33,10 @@ setwd('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/
 library('PhyloProfile') ## version 0.3.11
 library('pROC')
 
-load('complexAll/allRS_cut400_seed123.RData')
-load('SVD_profile.RData')
+load('complexAll/allRS_Bioinfo.RData')
+load('NPP70_profile.RData')
 
-profile <- t(norProfile100)
+profile <- t(norProfile)
 
 ## correlation
 simcor <- SimDistBatch(allRS, profile, SimCor, n = 8)
@@ -63,6 +63,6 @@ disteu <- SimDistBatch(allRS, profile, DistEuclidean, n = 8)
 euMat <- data.frame(distham = disteu, status = allRS[, 3])
 euRoc <- roc(status ~ disteu, euMat, levels = c('TP', 'TN'))
 
-## save(corMat, corRoc, jacMat, jacRoc, MIMat, MIRoc, hamMat, hamRoc, euMat, euRoc, file = 'complexAll/simdistROCSVD100_cutInf_seed123.RData')
-save(corMat, corRoc, MIMat, MIRoc, euMat, euRoc, file = 'complexAll/simdistROCSVD100_cut40_seed123.RData')
+## save(corMat, corRoc, jacMat, jacRoc, MIMat, MIRoc, hamMat, hamRoc, euMat, euRoc, file = 'complexAll/simdistROC_Bioinfo.RData')
+save(corMat, corRoc, MIMat, MIRoc, euMat, euRoc, file = 'complexAll/simdistROCNPP70_Bioinfo.RData')
 ##################################################################
