@@ -86,6 +86,20 @@ rocMatList <- foreach(i = 1:length(stList)) %dopar% {
   return(cbind(1 - x$specificities, x$sensitivities))
 }
 
+## better plot
+minRow <- min(sapply(rocMatList, nrow))
+rocMatList <- list(Top = rocMatList[[1]],
+                   Tree = rocMatList[[2]],
+                   Dollo = rocMatList[[3]][round(seq(1, nrow(rocMatList[[3]]), length.out = minRow)), ],
+                   Cor = rocMatList[[4]],
+                   Jaccard = rocMatList[[5]][round(seq(1, nrow(rocMatList[[5]]), length.out = minRow)), ],
+                   MI = rocMatList[[6]],
+                   Hamming = rocMatList[[7]][round(seq(1, nrow(rocMatList[[7]]), length.out = minRow)), ],
+                   NPP = rocMatList[[8]],
+                   SVD100 = rocMatList[[9]],
+                   SVD30 = rocMatList[[10]][round(seq(1, nrow(rocMatList[[10]]), length.out = minRow)), ]
+                   )
+
 ## plot ROC
 mergedRocMat <- do.call(rbind, rocMatList)
 mergedRocMat <- data.frame(FPR = mergedRocMat[, 1],
@@ -103,7 +117,7 @@ ggplot(data = mergedRocMat, mapping = aes(x = FPR, y = TPR, colour = Methods, li
   geom_line() +
   xlab('False positive rate') +
   ylab('True positive rate') +
-  geom_abline(intercept = 0, slope = 1, colour="grey", linetype = "dashed") +
+  geom_abline(intercept = 0, slope = 1, colour="grey", linetype = "longdash") +
   scale_linetype_manual(name = 'AUC',
                         labels = aucAnno,
                         breaks = names(stList),
@@ -132,7 +146,7 @@ mergedPrMat <- data.frame(Precision = mergedPrMat[, 1],
                           Recall = mergedPrMat[, 2],
                           Methods = rep(names(prMatList), sapply(prMatList, nrow)))
 
-pdf('complexAll/our_complexAll_cutInf_seed456_PR.pdf', height = 7, width = 9)
+pdf('complexAll/our_complexAll_cutInf_seed123_PR.pdf', height = 7, width = 9)
 ggplot(data = mergedPrMat, mapping = aes(x = Recall, y = Precision, colour = Methods, linetype = Methods)) +
   geom_line() +
   xlab('Recall') +
@@ -194,122 +208,3 @@ ggplot(data = mergedRocMat, mapping = aes(x = FPR, y = TPR, colour = Methods)) +
 dev.off()
 
 #####################################################################
-############################### plot ROC with other method #############
-
-## AUC 0.5580
-load('complex/Bioinfor_mutualROCMat.RData')
-## AUC 0.6064
-load('complex/Bioinfor_jacsimROCMat.RData')
-## AUC 0.5416
-load('complex/Bioinfor_corROCMat.RData')
-## AUC 0.5349
-load('complex/Bioinfor_bayesROCMat.RData')
-## AUC 0.6389
-load('complex/Bioinfor_topROCMat.RData')
-## ## load('complex/Bioinfor_ROCMat.RData')
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~plot PPV and RPP~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ROC2PPV <- function(rocMat, Pnum, Nnum) {
-  ## USE: conver ROC matrix to PPV (positive predictive value) matrix.
-  ## INPUT: 'rocMat' is a matrix, of which the first column is 'TPR', and the second column is 'FPR'. The rownames of 'rocMat' is the threshold. 'Pnum' and 'Nnum' is the total positive and negative number.
-  ## OUTPUT: 'ppvMat', and the PPV = TP/(TP+FP)
-
-  TPFPMat <- cbind(rocMat[, 1] * Pnum, rocMat[, 2] * Nnum)
-  ppv <- TPFPMat[, 1] / rowSums(TPFPMat)
-  ppvMat <- data.frame(Cutoff = as.numeric(rownames(rocMat)),
-                       PPV = ppv)
-  return(ppvMat)
-}
-
-
-ROC2RPPMat <- function(rocMat, Pnum, Nnum) {
-  ## USE: conver ROC matrix to RPP (rate of positive predictions) and PPV (positive predictive value) matrix.
-  ## INPUT: 'rocMat' is a matrix, of which the first column is 'TPR', and the second column is 'FPR'. The rownames of 'rocMat' is the threshold. 'Pnum' and 'Nnum' is the total positive and negative number.
-  ## OUTPUT: 'rppMat', and the PPV = TP/(TP+FP), RPP = (TP+FP)/(TP+FP+TN+FN)
-
-  ppv <- ROC2PPV(rocMat, Pnum, Nnum)[, 2]
-
-  TPFPMat <- cbind(rocMat[, 1] * Pnum, rocMat[, 2] * Nnum)
-  rpp <- rowSums(TPFPMat) / (Pnum + Nnum)
-
-  ppvrppMat <- data.frame(PPV = ppv, RPP = rpp)
-
-  return(ppvrppMat)
-}
-
-jacsimRppMat <- ROC2RPPMat(jacsimROCMat, 57114, 57114)
-corRppMat <- ROC2RPPMat(corROCMat, 57114, 57114)
-mutualRppMat <- ROC2RPPMat(mutualROCMat, 57114, 57114)
-topRppMat <- ROC2RPPMat(topROCMat, 57114, 57114)
-bayesRppMat <- ROC2RPPMat(bayesROCMat, 57114, 57114)
-
-mergedRppMat <- rbind(jacsimRppMat, corRppMat, mutualRppMat, bayesRppMat, topRppMat)
-mergedRppMat <- data.frame(PPV = mergedRppMat[, 1],
-                           RPP = mergedRppMat[, 2],
-                           Method = rep(c('Jaccard', 'Cor', 'Mutual', 'Tree', 'Top'), c(nrow(jacsimRppMat), nrow(corRppMat), nrow(mutualRppMat), nrow(bayesRppMat), nrow(topRppMat))))
-
-
-pdf('complexAll/our_complexAll_rpp.pdf', height = 7, width = 8)
-ggplot(data = mergedRppMat, mapping = aes(x = RPP, y = PPV, colour = Method)) +
-  geom_line() +
-  xlab('Rate of positive predictions') +
-  ylab('Positive predictive value') +
-  geom_hline(yintercept = 0.5, colour='grey', linetype = 'dashed') +
-  scale_y_continuous(limits=c(0, 1))
-dev.off()
- 
-
-jacsimPpvMat <- ROC2PPV(jacsimROCMat, 57114, 57114)
-pdf('complexAll/our_complexAll_ppv_jaccard.pdf')
-ggplot(data = jacsimPpvMat, mapping = aes(x = Cutoff, y = PPV)) +
-  geom_line(color = '#F8766D') +
-  xlab('Jaccard cut-off') +
-  ylab('Positive predictive value') +
-  scale_y_continuous(limits=c(0, 1)) +
-  geom_hline(yintercept = 0.5, colour='grey', linetype = 'dashed') 
-dev.off()
-
-corPpvMat <- ROC2PPV(corROCMat, 57114, 57114)
-pdf('complexAll/our_complexAll_ppv_cor.pdf')
-ggplot(data = corPpvMat, mapping = aes(x = Cutoff, y = PPV)) +
-  geom_line(color = '#D39200') +
-  xlab('Cor cut-off') +
-  ylab('Positive predictive value') +
-  scale_y_continuous(limits=c(0, 1)) +
-  geom_hline(yintercept = 0.5, colour='grey', linetype = 'dashed') 
-dev.off()
-
-mutualPpvMat <- ROC2PPV(mutualROCMat, 57114, 57114)
-pdf('complexAll/our_complexAll_ppv_mutual.pdf')
-ggplot(data = mutualPpvMat, mapping = aes(x = Cutoff, y = PPV)) +
-  geom_line(color = '#00C19F') +
-  xlab('MI cut-off') +
-  ylab('Positive predictive value') +
-  scale_y_continuous(limits=c(0, 1)) +
-  geom_hline(yintercept = 0.5, colour='grey', linetype = 'dashed') 
-dev.off()
-
-topPpvMat <- ROC2PPV(topROCMat, 57114, 57114)
-topPpvMat[, 1] <- 20127 - topPpvMat[, 1]
-pdf('complexAll/our_complexAll_ppv_top.pdf')
-ggplot(data = topPpvMat, mapping = aes(x = Cutoff, y = PPV)) +
-  geom_line(color = '#619CFF') +
-  xlab('Top cut-off') +
-  ylab('Positive predictive value') +
-  scale_y_continuous(limits=c(0, 1)) +
-  geom_hline(yintercept = 0.5, colour='grey', linetype = 'dashed') +
-  scale_x_reverse() 
-dev.off()
-
-bayesPpvMat <- ROC2PPV(bayesROCMat, 57114, 57114)
-pdf('complexAll/our_complexAll_ppv_bayes.pdf')
-ggplot(data = bayesPpvMat, mapping = aes(x = Cutoff, y = PPV)) +
-  geom_line(color = '#DB72FB') +
-  xlab('LR cut-off') +
-  ylab('Positive predictive value') +
-  scale_y_continuous(limits=c(0, 1)) +
-  geom_hline(yintercept = 0.5, colour='grey', linetype = 'dashed') 
-dev.off()
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-###########################################################################
