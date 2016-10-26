@@ -51,17 +51,17 @@ library('doMC')
 registerDoMC(4)
 
 ## load file
-load('complexAll/simdistROCNPP70_cutInf_seed456.RData')
+load('complexAll/simdistROCNPP70_Bioinfo.RData')
 corMatNPP <- corMat
 corRocNPP <- corRoc
-load('complexAll/simdistROCSVD100_cutInf_seed456.RData')
+load('complexAll/simdistROCSVD100_Bioinfo.RData')
 euMatSVD100 <- euMat
 euRocSVD100 <- euRoc
-load('complexAll/simdistROCSVD30_cutInf_seed456.RData')
+load('complexAll/simdistROCSVD30_Bioinfo.RData')
 euMatSVD30 <- euMat
 euRocSVD30 <- euRoc
 
-pat <- 'ROC_cutInf_seed456'
+pat <- 'ROC_Bioinfo'
 rocDataFiles <- dir('complexAll', pattern = pat, full.names = TRUE)
 for(i in rocDataFiles) {load(i)}
 
@@ -88,15 +88,16 @@ rocMatList <- foreach(i = 1:length(stList)) %dopar% {
 
 ## better plot
 minRow <- min(sapply(rocMatList, nrow))
+topRow <- nrow(rocMatList[[1]])
 rocMatList <- list(Top = rocMatList[[1]],
-                   Tree = rocMatList[[2]],
+                   Tree = rocMatList[[2]][round(seq(1, nrow(rocMatList[[2]]), length.out = topRow)), ],
                    Dollo = rocMatList[[3]][round(seq(1, nrow(rocMatList[[3]]), length.out = minRow)), ],
-                   Cor = rocMatList[[4]],
+                   Cor = rocMatList[[4]][round(seq(1, nrow(rocMatList[[4]]), length.out = topRow)), ],
                    Jaccard = rocMatList[[5]][round(seq(1, nrow(rocMatList[[5]]), length.out = minRow)), ],
-                   MI = rocMatList[[6]],
+                   MI = rocMatList[[6]][round(seq(1, nrow(rocMatList[[6]]), length.out = topRow)), ],
                    Hamming = rocMatList[[7]][round(seq(1, nrow(rocMatList[[7]]), length.out = minRow)), ],
-                   NPP = rocMatList[[8]],
-                   SVD100 = rocMatList[[9]],
+                   NPP = rocMatList[[8]][round(seq(1, nrow(rocMatList[[8]]), length.out = topRow)), ],
+                   SVD100 = rocMatList[[9]][round(seq(1, nrow(rocMatList[[9]]), length.out = topRow)), ],
                    SVD30 = rocMatList[[10]][round(seq(1, nrow(rocMatList[[10]]), length.out = minRow)), ]
                    )
 
@@ -112,7 +113,7 @@ names(colAnno) <- names(stList)
 lineAnno <- c('solid', 'solid', 'dashed', 'solid', 'dashed', 'solid', 'dashed', 'solid', 'solid', 'dashed')
 names(lineAnno) <- names(stList)
 
-pdf('complexAll/our_complexAll_cutInf_seed456_ROC.pdf', height = 7, width = 9)
+pdf('complexAll/Bioinfo_ROC.pdf', height = 7, width = 9)
 ggplot(data = mergedRocMat, mapping = aes(x = FPR, y = TPR, colour = Methods, linetype = Methods)) +
   geom_line() +
   xlab('False positive rate') +
