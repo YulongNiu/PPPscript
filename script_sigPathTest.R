@@ -142,3 +142,83 @@ ggplot(topSigMat[1:60, ], aes(x = pathName, y = percentage, label = pred)) +
   ylab('Predicted percentage')
 dev.off()
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+###################################################################
+
+########################add NPP test###############################
+##~~~~~~~~~~~~~~~~~~~~~~~~load complex~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+load('complexAll/comInterJacCor.RData')
+complexPathFilter <- lapply(MIPSHumList, function(x) {
+  x <- x[[2]][, 1:2, drop = FALSE]
+  colnames(x) <- c('from', 'to')
+  return(x)
+})
+names(complexPathFilter) <- sapply(MIPSHumList, '[[', 4)
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~NPP pathways~~~~~~~~~~~~~~~~~~
+library('foreach')
+library('doMC')
+registerDoMC(4)
+
+load('pathway/pathFilter.RData')
+load('NPP70_profile.RData')
+topSigPath <- read.csv('topSigPath.csv', stringsAsFactors = FALSE, row.names = 1)
+topSigPath <- topSigPath[1:60, ]
+topSigPath <- topSigPath[order(topSigPath[, 4]), ]
+allNames <- rownames(topSigPath)
+geneNames <- rownames(norProfile)
+
+## BioCarta
+pathNames1 <- allNames[topSigPath[, 4] == 'BioCarta']
+eachPath1 <- biocartaPathFilter[pathNames1]
+pathCor1 <- lapply(eachPath1, function(x) {
+  eachPathCor <- foreach(i = seq_len(nrow(x)), .combine = c) %dopar% {
+    eachCor <- cor(t(norProfile[geneNames %in% x[i, 1:2], ]))[1, 2]
+    return(eachCor)
+  }
+  return(eachPathCor)
+})
+
+## Complex
+pathNames1 <- allNames[topSigPath[, 4] == 'Complex']
+eachPath1 <- complexPathFilter[pathNames1]
+pathCor2 <- lapply(eachPath1, function(x) {
+  eachPathCor <- foreach(i = seq_len(nrow(x)), .combine = c) %dopar% {
+    eachCor <- cor(t(norProfile[geneNames %in% x[i, 1:2], ]))[1, 2]
+    return(eachCor)
+  }
+  return(eachPathCor)
+})
+
+## KEGG
+pathNames1 <- allNames[topSigPath[, 4] == 'KEGG']
+eachPath1 <- keggPathFilter[pathNames1]
+pathCor3 <- lapply(eachPath1, function(x) {
+  eachPathCor <- foreach(i = seq_len(nrow(x)), .combine = c) %dopar% {
+    eachCor <- cor(t(norProfile[geneNames %in% x[i, 1:2], ]))[1, 2]
+    return(eachCor)
+  }
+  return(eachPathCor)
+})
+
+## Reactome
+pathNames1 <- allNames[topSigPath[, 4] == 'Reactome']
+eachPath1 <- reactomePathFilter[pathNames1]
+pathCor4 <- lapply(eachPath1, function(x) {
+  eachPathCor <- foreach(i = seq_len(nrow(x)), .combine = c) %dopar% {
+    eachCor <- cor(t(norProfile[geneNames %in% x[i, 1:2], ]))[1, 2]
+    return(eachCor)
+  }
+  return(eachPathCor)
+})
+
+pathCor <- c(pathCor1, pathCor2, pathCor3, pathCor4)
+
+## threshold
+## top 400 sensitivity 0.9670519
+## NPP 0.7274617 sensitivity 0.9670519
+thres <- 0.73
+pathCorNum <- sapply(pathCor, function(x){return(sum(x > thres))})
+write.csv(cbind(topSigPath, pathCorNum), file = 'test.csv')
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+###################################################################
