@@ -219,6 +219,34 @@ pathCor <- c(pathCor1, pathCor2, pathCor3, pathCor4)
 ## NPP 0.7274617 sensitivity 0.9670519
 thres <- 0.73
 pathCorNum <- sapply(pathCor, function(x){return(sum(x > thres))})
-write.csv(cbind(topSigPath, pathCorNum), file = 'test.csv')
+topSigPath <- cbind(topSigPath, pathCorNum)
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~plot sigPath~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# significant pathways are chose from 5 databases with
+# 1. predicted number >= 15
+# 2. predicted percentage >= 50%
+# 3. ordered by percentage
+
+library('ggplot2')
+library('scales')
+topSigMat <- data.frame(pathName = rownames(topSigPath),
+                        Top = topSigPath[ ,1],
+                        NPP = topSigPath[, 5],
+                        All = topSigPath[, 2],
+                        percentage = topSigPath[, 3],
+                        database = factor(topSigPath[, 4]))
+
+pdf('top_sig_pathway.pdf', width = 9, height = 10)
+ggplot(topSigMat, aes(x = pathName, y = percentage, label = Top)) +
+  geom_point(aes(color = database), size = 3) +
+  coord_flip() +
+  geom_text(y = 1.07, size = 3.5) +
+  geom_text(data = topSigMat, mapping = aes(y = 1.17, label = NPP), size = 3.5) +
+  geom_text(data = topSigMat, mapping = aes(y = 1.27, label = All), size = 3.5) +
+  scale_y_continuous(limits = c(0.6, 1.3), breaks = seq(0.6, 1, 0.1), labels = percent_format()) +
+  xlab('') +
+  ylab('Predicted percentage')
+dev.off()
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ###################################################################
