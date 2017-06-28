@@ -237,13 +237,13 @@ topSigMat <- data.frame(pathName = rownames(topSigPath),
                         percentage = topSigPath[, 3],
                         database = factor(topSigPath[, 4]))
 
-pdf('top_sig_pathway.pdf', width = 9, height = 10)
+pdf('pathway/top_sig_pathway.pdf', width = 9, height = 10)
 ggplot(topSigMat, aes(x = pathName, y = percentage, label = Top)) +
   geom_point(aes(color = database), size = 3) +
   coord_flip() +
-  geom_text(y = 1.07, size = 3.5) +
-  geom_text(data = topSigMat, mapping = aes(y = 1.17, label = NPP), size = 3.5) +
-  geom_text(data = topSigMat, mapping = aes(y = 1.27, label = All), size = 3.5) +
+  geom_text(y = 1.1, size = 3.5) +
+  geom_text(data = topSigMat, mapping = aes(y = 1.2, label = NPP), size = 3.5) +
+  geom_text(data = topSigMat, mapping = aes(y = 1.3, label = All), size = 3.5) +
   scale_y_continuous(limits = c(0.6, 1.3), breaks = seq(0.6, 1, 0.1), labels = percent_format()) +
   xlab('') +
   ylab('Predicted percentage')
