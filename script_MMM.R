@@ -84,24 +84,15 @@ save(MMMLinksWhole, MMMAnnoEntrez, file = 'MMM12.RData')
 #################################################################
 
 ################select all present#####################
-library('biomaRt')
-
 setwd('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/MMM/')
 load('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/wholePhyloData.RData')
+load('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/MMM/MMM12.RData')
 
 ## set threshold 95%
 thres <- 0.95
 phyloP <- wholePhyloDataNet[rowSums(wholePhyloDataNet) >= floor(ncol(wholePhyloDataNet) * thres), , drop = FALSE]
 
-## annotation select genes
-geneEntrez <- strsplit(rownames(phyloP),
-                       split = ':',
-                       fixed = TRUE)
-geneEntrez <- sapply(geneEntrez, '[[', 2)
-ensembl <- useMart("ensembl",dataset="hsapiens_gene_ensembl")
-hsaAnno <- getBM(attributes = c('entrezgene', 'ensembl_gene_id', 'ensembl_transcript_id', 'ensembl_peptide_id', 'hgnc_symbol', 'chromosome_name', 'start_position', 'end_position'), filters = 'entrezgene', value = geneEntrez, mart = ensembl)
-
-## HGNC annotation
-HGNCAnno <- read.csv('HGNC_anno.txt', sep = '\t', stringsAsFactor = FALSE)
-
+## check MMM12
+MMMAnnoEntrez[, 3] <- paste0('hsa:', MMMAnnoEntrez[, 3])
+sum(rownames(phyloP) %in% MMMAnnoEntrez[, 3])
 #######################################################
