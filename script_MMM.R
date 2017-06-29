@@ -23,13 +23,16 @@ pHGNC <- HGNCAnno[, 5]
 mAnno <- MMMAnno[, 2]
 geneIdx <- numeric(nrow(MMMAnno))
 for(i in seq_along(geneIdx)) {
-  currentIdx <- match(mAnno[i], cHGNC)
+  eachGene <- mAnno[i]
+  eachGene <- sub('ORF', 'orf', eachGene)
+  currentIdx <- match(eachGene, cHGNC)
+
   if (is.na(currentIdx)) {
 
     for (j in seq_along(pHGNC)) {
       eachP <- unlist(strsplit(pHGNC[j], split = ',', fixed = TRUE))
       eachP <- str_trim(eachP)
-      if (sum(eachP %in% mAnno[i]) > 0) {
+      if (sum(eachP %in% eachGene) > 0) {
         currentIdx <- j
         break
       } else {}
@@ -40,9 +43,43 @@ for(i in seq_along(geneIdx)) {
 }
 
 MMMAnnoEntrez <- cbind(MMMAnno, entrez = HGNCAnno[geneIdx, 11])
+which(is.na(MMMAnnoEntrez[, 3]))
 
 ## manually check
+MMMAnnoEntrez[70, 3] <- 23189
+MMMAnnoEntrez[189, 3] <- 26354
+MMMAnnoEntrez[264, 3] <- 6133
+MMMAnnoEntrez[284, 3] <- 5783
+MMMAnnoEntrez[289, 3] <- 84247
+MMMAnnoEntrez[329, 3] <- NA
+MMMAnnoEntrez[360, 3] <- 2966
+MMMAnnoEntrez[489, 3] <- 4233
+MMMAnnoEntrez[503, 3] <- 285966
+MMMAnnoEntrez[528, 3] <- 5395
+MMMAnnoEntrez[533, 3] <- NA
+MMMAnnoEntrez[569, 3] <- NA
+MMMAnnoEntrez[706, 3] <- 9738
+MMMAnnoEntrez[748, 3] <- 54768
+MMMAnnoEntrez[796, 3] <- 6143
+MMMAnnoEntrez[920, 3] <- 56342
+MMMAnnoEntrez[992, 3] <- 6122
+MMMAnnoEntrez[1034, 3] <- 22925
+MMMAnnoEntrez[1059, 3] <- 3329
+MMMAnnoEntrez[1136, 3] <- 64395
+MMMAnnoEntrez[1330, 3] <- 8078
+MMMAnnoEntrez[1331, 3] <- 7167
+MMMAnnoEntrez[1428, 3] <- 1650
+MMMAnnoEntrez[1520, 3] <- 6202
 
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## update
+noGene <- MMMAnnoEntrez[is.na(MMMAnnoEntrez[, 3]), 1]
+## from 1608 --> 1605
+MMMAnnoEntrez <- MMMAnnoEntrez[!is.na(MMMAnnoEntrez[, 3]), ]
+noLinkLog <- (MMMLinksWhole[, 1] %in% noGene) | (MMMLinksWhole[, 2] %in% noGene)
+## from 6422 --> 6386
+MMMLinksWhole <- MMMLinksWhole[!noLinkLog, ]
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 save(MMMLinksWhole, MMMAnno, file = 'MMM12.RData')
 
 
