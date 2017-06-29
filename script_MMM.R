@@ -1,4 +1,6 @@
 ###########################select linkages######################
+library('stringr')
+
 setwd('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/MMM/')
 
 ## whole 6422 linkages
@@ -16,20 +18,30 @@ rownames(MMMAnno) <- NULL
 
 ## HNGC
 HGNCAnno <- read.csv('HGNC_anno.txt', sep = '\t', stringsAsFactor = FALSE)
-## step1 current symbol
 cHGNC <- HGNCAnno[, 2]
 pHGNC <- HGNCAnno[, 5]
+mAnno <- MMMAnno[, 2]
 geneIdx <- numeric(nrow(MMMAnno))
-for(i in geneIdx) {
-  currentIdx <- mathc(MMMAnno[i, 2], cHGNC)
+for(i in seq_along(geneIdx)) {
+  currentIdx <- match(mAnno[i], cHGNC)
   if (is.na(currentIdx)) {
-  } else {
-    geneIdx[i] <- currentIdx
-  }
+
+    for (j in seq_along(pHGNC)) {
+      eachP <- unlist(strsplit(pHGNC[j], split = ',', fixed = TRUE))
+      eachP <- str_trim(eachP)
+      if (sum(eachP %in% mAnno[i]) > 0) {
+        currentIdx <- j
+        break
+      } else {}
+    }
+
+  } else {}
+  geneIdx[i] <- currentIdx
 }
-currentIdx <- match(MMMAnno[, 2], HGNCAnno[, 2])
-NAIdx <- is.na(currentIdx)
-MMMAnno[!hasLogic, ]
+
+MMMAnnoEntrez <- cbind(MMMAnno, entrez = HGNCAnno[geneIdx, 11])
+
+## manually check
 
 save(MMMLinksWhole, MMMAnno, file = 'MMM12.RData')
 
