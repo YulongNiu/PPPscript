@@ -80,9 +80,7 @@ noLinkLog <- (MMMLinksWhole[, 1] %in% noGene) | (MMMLinksWhole[, 2] %in% noGene)
 ## from 6422 --> 6386
 MMMLinksWhole <- MMMLinksWhole[!noLinkLog, ]
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-save(MMMLinksWhole, MMMAnno, file = 'MMM12.RData')
-
-
+save(MMMLinksWhole, MMMAnnoEntrez, file = 'MMM12.RData')
 #################################################################
 
 ################select all present#####################
