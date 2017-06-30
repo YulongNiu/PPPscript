@@ -91,8 +91,8 @@ setwd('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/
 load('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/wholePhyloData.RData')
 load('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/MMM/MMM12.RData')
 
-## set threshold 90%
-thres <- 0.9
+## set threshold
+thres <- 0
 phyloP <- wholePhyloDataNet[rowSums(wholePhyloDataNet) >= floor(ncol(wholePhyloDataNet) * thres), , drop = FALSE]
 
 ## check MMM12
@@ -193,5 +193,12 @@ linkjc <- foreach(i = seq_len(nrow(linkMat)), .combine = rbind) %do% {
 linkMat <- cbind(linkMat, linkjc)
 
 distTop <- GetPosJacBatch('../jaccardSim.desc', '../wholeCor.desc', linkMat, 0, n = 4)
+thresLinksRes <- cbind(thresLinks[, 1:8],
+                    Jaccard = round(as.numeric(linkMat[, 3]), 2),
+                    Cor = round(as.numeric(linkMat[, 4]), 2),
+                    mmm = thresLinks[, 9],
+                    Top = distTop)
+
+save(thresLinksRes, file = 'thresLinksRes.RData')
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #######################################################
