@@ -202,3 +202,50 @@ thresLinksRes <- cbind(thresLinks[, 1:8],
 save(thresLinksRes, file = 'thresLinksRes.RData')
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #######################################################
+
+#############################plot thresLink########################
+library('ggplot2')
+
+setwd('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/MMM/')
+load('/home/Yulong/RESEARCH/neuro/Bioinfor/PhyloViz/phyloMito/wholenetwork0001/MMM/thresLinksRes.RData')
+
+p1 <- as.numeric(sub('%', '', as.character(thresLinksRes[, 7])))/100
+p2 <- as.numeric(sub('%', '', as.character(thresLinksRes[, 8])))/100
+
+thresL <- data.frame(p1 = p1,
+                     p2 = p2,
+                     Top = thresLinksRes[, 12])
+
+PresentAcc <- function(thresMat, pThres, tThres = 50) {
+  passLogic <- (thresMat[, 1] > pThres) & (thresMat[, 2] > pThres)
+  thresM <- thresMat[passLogic, ]
+  topNum <- thresM[, 3]
+
+  tVec <- seq(min(topNum), max(topNum), tThres)
+  tAcc <- numeric(length(tVec))
+
+  for (i in seq_along(tAcc)) {
+    tAcc[i] <- sum(topNum <= tVec[i])
+  }
+
+  hitM <- data.frame(hitRate = tAcc/length(topNum),
+                     top = tVec)
+
+  return(hitM)
+}
+
+tmpM <- PresentAcc(thresL, 0.95)
+linkM <- rbind(PresentAcc(thresL, 0.95),
+               PresentAcc(thresL, 0.85),
+               PresentAcc(thresL, 0.75),
+               PresentAcc(thresL, 0.65),
+               PresentAcc(thresL, 0.55))
+pdf('MMM_compare.pdf')
+linkM <- cbind(linkM, thres = rep(c(0.95, 0.85, 0.75, 0.65, 0.55), each = nrow(tmpM)))
+ggplot(linkM, aes(top, hitRate, colour = factor(thres))) +
+  geom_line() +
+  xlim(0, 3000) +
+  xlab('Top rank') +
+  ylab('Hit rate')
+dev.off()
+###################################################################
